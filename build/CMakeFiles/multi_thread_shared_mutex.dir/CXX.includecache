@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/kao/cpp/CPP-performance-optimization/src/multi_thread_shared_mutex.cpp
+iostream
+-
+shared_mutex
+-
+unordered_map
+-
+string
+-
+thread
+-
+vector
+-
+boost/thread/shared_mutex.hpp
+-
+

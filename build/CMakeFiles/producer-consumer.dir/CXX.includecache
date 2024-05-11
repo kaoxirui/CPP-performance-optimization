@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/kao/cpp/CPP-performance-optimization/src/producer-consumer.cpp
+iostream
+-
+semaphore.h
+-
+pthread.h
+-
+list
+-
+unistd.h
+-
+

@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/kao/cpp/CPP-performance-optimization/src/Asynchronous_programming.cpp
+iostream
+-
+future
+-
+thread
+-
+chrono
+-
+
