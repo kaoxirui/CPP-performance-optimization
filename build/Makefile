@@ -150,6 +150,19 @@ multi_thread_shared_mutex/fast:
 .PHONY : multi_thread_shared_mutex/fast
 
 #=============================================================================
+# Target rules for targets named lockfree
+
+# Build rule for target.
+lockfree: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 lockfree
+.PHONY : lockfree
+
+# fast build rule for target.
+lockfree/fast:
+	$(MAKE) -f CMakeFiles/lockfree.dir/build.make CMakeFiles/lockfree.dir/build
+.PHONY : lockfree/fast
+
+#=============================================================================
 # Target rules for targets named multi_thread_mutex
 
 # Build rule for target.
@@ -188,6 +201,33 @@ src/Asynchronous_programming.s: src/Asynchronous_programming.cpp.s
 src/Asynchronous_programming.cpp.s:
 	$(MAKE) -f CMakeFiles/Asynchronous_programming.dir/build.make CMakeFiles/Asynchronous_programming.dir/src/Asynchronous_programming.cpp.s
 .PHONY : src/Asynchronous_programming.cpp.s
+
+src/lockfree.o: src/lockfree.cpp.o
+
+.PHONY : src/lockfree.o
+
+# target to build an object file
+src/lockfree.cpp.o:
+	$(MAKE) -f CMakeFiles/lockfree.dir/build.make CMakeFiles/lockfree.dir/src/lockfree.cpp.o
+.PHONY : src/lockfree.cpp.o
+
+src/lockfree.i: src/lockfree.cpp.i
+
+.PHONY : src/lockfree.i
+
+# target to preprocess a source file
+src/lockfree.cpp.i:
+	$(MAKE) -f CMakeFiles/lockfree.dir/build.make CMakeFiles/lockfree.dir/src/lockfree.cpp.i
+.PHONY : src/lockfree.cpp.i
+
+src/lockfree.s: src/lockfree.cpp.s
+
+.PHONY : src/lockfree.s
+
+# target to generate assembly for a file
+src/lockfree.cpp.s:
+	$(MAKE) -f CMakeFiles/lockfree.dir/build.make CMakeFiles/lockfree.dir/src/lockfree.cpp.s
+.PHONY : src/lockfree.cpp.s
 
 src/multi_thread_mutex.o: src/multi_thread_mutex.cpp.o
 
@@ -281,10 +321,14 @@ help:
 	@echo "... Asynchronous_programming"
 	@echo "... producer-consumer"
 	@echo "... multi_thread_shared_mutex"
+	@echo "... lockfree"
 	@echo "... multi_thread_mutex"
 	@echo "... src/Asynchronous_programming.o"
 	@echo "... src/Asynchronous_programming.i"
 	@echo "... src/Asynchronous_programming.s"
+	@echo "... src/lockfree.o"
+	@echo "... src/lockfree.i"
+	@echo "... src/lockfree.s"
 	@echo "... src/multi_thread_mutex.o"
 	@echo "... src/multi_thread_mutex.i"
 	@echo "... src/multi_thread_mutex.s"

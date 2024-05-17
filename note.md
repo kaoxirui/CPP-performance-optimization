@@ -209,7 +209,7 @@ fun<int,char,double,string>(1,'a',1.1,"hi");
 
 上述T为函数类型，即返回类型和参数类型
 
-`std::function<int(int,int)`定义一个返回类型为int，形参类型为int,int的函数对象
+`std::function<int(int,int)`>定义一个返回类型为int，形参类型为int,int的函数对象
 
 ```c++
 #include <iostream>
@@ -361,3 +361,584 @@ std::transform(vec.begin(),vec.end(),vec.begin(),[](int i){return i<0?-1:i});
 如果函数体代码比较多，需要执行较长的时间，呢么函数调用机制占用的时间可以忽略；如果函数只有一两条语句，那么大部分时间都会花在函数调用机制上，这种时间开销不容忽视
 
 C++提供一种高效率的方法，即在编译时将函数调用处用函数体替换，类似于c语言中的宏展开。**这种在函数调用处直接嵌入函数体的函数称为内联函数（Inline Function），又称内嵌函数或者内置函数。**
+
+
+
+# 左值引用和右值引用
+
+https://blog.csdn.net/m0_59938453/article/details/125858335?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171573914416800185874809%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=171573914416800185874809&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-1-125858335-null-null.nonecase&utm_term=%E5%B7%A6%E5%80%BC&spm=1018.2226.3001.4450
+
+## 左值和右值
+
+### 左值（出现在赋值语句左边的表达式）
+
+左值是一个表示数据的表达式，比如：变量名，解引用的指针变量。一般的，我们可以获取他的地址和对他复制，但被const修饰后的左值，不能给他赋值，但是仍然可以获取他的地址
+
+**总体而言，可以取地址的对象就是左值**
+
+```c++
+int a=3;
+int* p=&a;
+*p;
+const int b=2;
+//a,p,*p,b都是左值
+```
+
+### 右值（出现在赋值语句的右边）
+
+右值也是一个表示数据的表达式，比如：字面常量，表达式返回值，传值返回函数的返回值（是传值返回，而不是传引用返回），**右值不能出现在赋值符号的坐标且不能获取地址**
+
+**总体而言，不可以取地址的对象就是右值**
+
+```c++
+double x=1.3,y=3.8;
+//一下几个是常见的右值
+10;
+x+y;
+fmin(x+y);
+```
+
+>以下写法均不能通过编译：
+>
+>    1. 10 = 4;、x + y = 4;、fmin(x, y) = 4;，VS2015 编译报错：error C2106: “=”: 左操作数必须为左值。原因：右值不能出现在赋值符号的左边。
+>```
+>2. &10;、&(x + y);、&fmin(x, y);，VS2015 编译报错：error C2102: “&” 要求左值。原因：右值不能取地址。
+>```
+
+## 左值引用和右值引用
+
+### 左值引用
+
+左值引用就是对左值的引用，给左值区别名
+
+```c++
+int& ra=a;
+int*& rp=p;
+int& r=*p;
+const int& rb=b;
+```
+
+### 右值引用
+
+右值引用就是对右值的引用，给右值取别名。
+
+> 右值引用的表示是在具体的变量名称后家两个&，如`int&& rr=4`
+
+```C++
+// 以下几个是对上面右值的右值引用
+int&& rr1 = 10;
+double&& rr2 = x + y;
+double&& rr3 = fmin(x, y);
+```
+
+
+
+> 注意：
+>
+> 右值引用引用右值，会使右值被存储到特定的位置
+>
+> 也就是说，**右值引用变量其实是左值**，可以对他取地址和赋值（const右值引用变量可以取地址但不可以赋值，因为 const 在起作用）。
+>
+> 当然，取地址是指取变量空间的地址（右值是不能取地址的）。
+>
+> 比如：
+>
+>     double&& rr2 = x + y;
+>     &rr2;
+>     rr2 = 9.4;
+>     右值引用 rr2 引用右值 x + y 后，该表达式的返回值被存储到特定的位置，不能取表达式返回值 x + y 的地址，但是可以取 rr2 的地址，也可以修改 rr2 。
+>     const double&& rr4 = x + y;
+>     &rr4;
+>     可以对 rr4 取地址，但不能修改 rr4，即写成rr4 = 5.3;会编译报错。
+
+## 对比与总结
+
+### 左值引用总结
+
+1. 左值引用只能引用左值，不能直接引用右值
+2. 但是`const左值引用`既可以引用左值，也可以引用右值
+
+```c++
+//左值引用只能引用左值
+int t=8;
+int& rt1=t;
+//int& rt2 = 8;  // 编译报错，因为8是右值，不能直接引用右值
+
+//但是const左值引用可以引用左值和右值
+const int& rt3=t;
+const int& rt4=8;
+const double& r1=x+y;
+const double& r2=fmin(x+y);
+```
+
+>问：为什么const左值引用也可以引用右值？
+>答：在 C++11标准产生之前，是没有右值引用这个概念的，当时如果想要一个类型既能接收左值也能接收右值的话，需要用const左值引用，比如标准容器的 push_back 接口：void push_back (const T& val)。
+>也就是说，如果const左值引用不能引用右值的话，有些接口就不好支持了。
+
+> gpt:
+>
+> ```C++
+> void foo(const std::string& s) {
+>     // 处理字符串 s
+> }
+> ```
+>
+> 你可以使用 `foo("hello")` 这样的右值来调用该函数,因为 `const` 左值引用可以绑定到右值。如果使用非 `const` 左值引用,就无法这样调用函数,需要先创建一个临时对象。
+>
+> 总之,`const` 左值引用可以引用右值,是因为它可以延长临时对象的生命周期、避免额外的拷贝操作,并且增加函数的灵活性和可复用性。这是 C++ 中一个非常有用的特性。
+
+### 右值引用总结：
+
+1. 右值引用只能引用右值，不能直接引用左值。
+2. 但是右值引用可以引用被`move`的左值。
+
+> std::moce(C++11)，作用是将一个左值强制转化为右值，以实现移动语义，左值被move后变为右值，于是右值引用可以引用
+
+```c++
+//右值引用只能引用右值
+int&& rr1 = 10;
+double&& rr2 = x + y;
+const double&& rr3 = x + y;
+
+int t = 10;
+//int&& rrt = t;  // 编译报错，不能直接引用左值
+// 2.但是右值引用可以引用被move的左值
+int&& rrt = std::move(t);
+int*&& rr4 = std::move(p);
+int&& rr5 = std::move(*p);
+const int&& rr6 = std::move(b);
+```
+
+> gpt:
+>
+> 使用 `std::move()` 可以将一个左值转换为右值引用,从而让编译器知道我们希望对这个对象执行移动操作,而不是拷贝操作。这样做的好处包括:
+>
+> 1. **避免不必要的拷贝**:
+>    - 当函数接受一个右值引用参数时,我们可以使用 `std::move()` 将左值传递给它,从而触发移动构造而不是拷贝构造。这可以显著提高性能。
+> 2. **简化代码**:
+>    - 使用 `std::move()` 可以让我们在代码中明确地表达我们的意图,即我们希望对一个对象执行移动操作而不是拷贝操作。这可以使代码更加清晰易懂。
+> 3. **支持 RVO 和 NRVO**:
+>    - 当我们返回一个右值引用时,编译器可以进行返回值优化(RVO 和 NRVO),进一步提高性能。使用 `std::move()` 可以帮助编译器识别这些优化的机会。
+
+## 左值引用使用场景及意义
+
+```C++
+// 1.左值引用做参数
+void func1(string s)
+{...}
+
+void func2(const string& s)
+{...}
+
+
+int main()
+{
+	string s1("Hello World!");
+	func1(s1);  // 由于是传值传参且做的是深拷贝，代价较大
+	func2(s1);  // 左值引用做参数减少了拷贝，提高了效率
+	
+	return 0;
+}
+
+```
+
+传值传参和传值返回都会产生拷贝，有的甚至是深拷贝，代价很大。而左值引用的实际意义在于做参数和做返回值都可以减少拷贝，从而提高效率。
+
+* 短板
+
+左值引用虽然较完美地解决了大部分问题，但对于有些问题仍然不能很好地解决。
+
+当对象出了函数作用域以后仍然存在时，可以使用左值引用返回，这是没问题的。
+
+```c++
+string& operator+=(char ch)
+{
+	push_back(ch);
+	return *this;
+}
+```
+
+但当对象（对象是函数内的局部对象）出了函数作用域以后不存在时，就不可以使用左值引用返回了。
+
+```C++
+string operator+(const string& s, char ch)
+{
+	string ret(s);
+	ret.push_back(ch);
+	return ret;
+}
+
+// 拿现在这个函数来举例：ret是函数内的局部对象，出了函数作用域后会被析构，即被销毁了
+// 若此时再返回它的别名（左值引用），也就是再拿这个对象来用，就会出问题
+```
+
+## 右值引用
+
+为解决上述传值返回的拷贝问题，，C++11标准就增加了**右值引用**和**移动语义**。
+
+### 移动语义
+
+将一个对象中的资源**移动**到另一个对象（资源控制权的转移）。移动语义是一种可以将资源（如内存）从一个对象转移到另一个对象的方式，而不是进行资源的复制。移动操作通常比复制操作更高效，对于大型的对象（如容器/字符串等）可以带来很大的优势
+
+
+
+可以将对象从左值变为右值（变成右值可以赋值来），避免拷贝构造，只是将对象状态或者所有权从一个对象转移到另一个对象，没有涉及内存的搬迁或者内存拷贝，从而极大地提高代码效率。
+
+**但需要注意，使用 std::move 后原对象（如上面的obj6）的状态是不确定的，不应再对其进行操作，否则程序运行时可能出现Segmentation fault (core dumped)报错！！！**
+
+#### 移动构造
+
+转移参数右值的资源来构造自己
+
+```cpp
+// 这是一个模拟string类的实现的移动构造
+string(string&& s)
+	:_str(nullptr)
+	, _size(0)
+	, _capacity(0)
+{
+	swap(s);
+}
+```
+
+拷贝构造函数和移动构造函数都是构造函数的重载函数，所不同的是：
+
+1. 拷贝构造函数的参数是 const左值引用，接收左值或右值；
+2. 移动构造函数的参数是右值引用，接收右值或被 move 的左值。
+
+
+
+### 完美转发（perfect forward）
+
+* 引入原因：
+
+  在此之前，需要知道什么是万能引用
+
+  **确定类型**的&&表示右值引用（int&&，string&&）
+
+  但函数模板中的&&不表示右值引用，而是万能引用，模板类型必须通过推断才能确定，其接受**左值**后才会被推导为**左值引用**，接受**右值**后会被推导为**右值引用**
+
+注意区分右值引用和万能引用：下面的函数的 T&& 并不是万能引用，因为 T 的类型在模板实例化时已经确定。
+
+```c++
+template<typename T>
+class A
+{
+	void func(T&& t);  // 模板实例化时T的类型已经确定，调用函数时T是一个确定类型，所以这里是右值引用
+};
+```
+
+让我们通过下面的程序来认识万能引用：
+
+```C++
+template<typename T>
+void f(T&& t)  // 万能引用
+{
+	//...
+}
+
+int main()
+{
+	int a = 5;  // 左值
+	f(a);  // 传参后万能引用被推导为左值引用
+	
+	const string s("hello");  // const左值
+	f(s);  // 传参后万能引用被推导为const左值引用
+	
+	f(to_string(1234));  // to_string函数会返回一个string临时对象，是右值，传参后万能引用被推导为右值引用
+
+	const double d = 1.1;
+	f(std::move(d));  // const左值被move后变成const右值，传参后万能引用被推导为const右值引用
+	
+	return 0;
+}
+```
+
+```c++
+void Func(int& x) {	cout << "左值引用" << endl; }
+
+void Func(const int& x) { cout << "const左值引用" << endl; }
+
+void Func(int&& x) { cout << "右值引用" << endl; }
+
+void Func(const int&& x) { cout << "const右值引用" << endl; }
+
+
+template<typename T>
+void f(T&& t)  // 万能引用
+{
+	Func(t);  // 根据参数t的类型去匹配合适的重载函数
+}
+
+int main()
+{
+	int a = 4;  // 左值
+	f(a);
+	
+	const int b = 8;  // const左值
+	f(b);
+	
+	f(10); // 10是右值
+	
+	const int c = 13;
+	f(std::move(c));  // const左值被move后变成const右值
+	
+	return 0;
+}
+
+```
+
+运行程序后，我们本以为打印的结果是：
+ 左值引用
+ const左值引用
+ 右值引用
+ const右值引用
+
+但实际的结果却是
+
+ 左值引用
+ const左值引用
+
+ 左值引用
+ const左值引用
+
+其实在本文的前面已经讲过了，**右值引用变量其实是左值**，所以就有了上面的运行结果。
+
+> 具体解释：
+>
+>     f(10);
+>     10是右值，传参后万能引用被推导为右值引用，但该右值引用变量其实是左值，因此实际调用的函数是void Func(int& x)。
+>     f(std::move(c));
+>     const左值被move后变成const右值，传参后万能引用被推导为const右值引用，但该const右值引用变量其实是const左值，因此实际调用的函数是void Func(const int& x)。
+
+也就是说，**右值引用失去了右值的属性**。
+
+但我们希望的是，在传递过程中能够保持住它的原有的左值或右值属性，于是 C++11标准提出完美转发。
+
+#### 概念
+
+完美转发是指在函数模板中，完全依照模板的参数类型，将参数传递给当前函数模板中的另外一个函数。
+
+因此，为了实现完美转发，除了使用万能引用之外，我们还要用到std::forward（C++11），它在传参的过程中保留对象的原生类型属性。
+
+这样右值引用在传递过程中就能够保持右值的属性。
+```C++
+void Func(int& x) { cout << "左值引用" << endl; }
+
+void Func(const int& x) { cout << "const左值引用" << endl; }
+
+void Func(int&& x) { cout << "右值引用" << endl; }
+
+void Func(const int&& x) { cout << "const右值引用" << endl; }
+
+
+template<typename T>
+void PerfectForward(T&& t)  // 万能引用
+{
+	Func(std::forward<T>(t));  // 根据参数t的类型去匹配合适的重载函数
+}
+
+int main()
+{
+	int a = 4;  // 左值
+	PerfectForward(a);
+
+	const int b = 8;  // const左值
+	PerfectForward(b);
+
+	PerfectForward(10); // 10是右值
+
+	const int c = 13;
+	PerfectForward(std::move(c));  // const左值被move后变成const右值
+
+	return 0;
+}
+
+```
+
+**实现完美转发需要用到万能引用和 std::forward 。**
+
+
+
+# 信号量
+
+`sem_t`是POSIX线程库提供的一个信号量类型，用于同步多个线程对共享资源的访问。它可以用于线程之间的同步，进程之间的同步以及进程和线程之间的同步
+
+* `sem_t`类型的变量被称为信号量，它通常是一个非负整数，并且具有以下两个基本操作：
+
+*  `sem_wait()`：请求信号量，如果信号量的值大于0，则将其减1，并继续执行，否则当前线程将阻塞知道信号量的值大于0
+
+* `sem_post()`：释放信号量，将信号量的值加1
+
+   pthread_mutex_t 是 POSIX（Portable Operating System Interface）线程库中的数据类型，通常简称为 Pthreads。它提供了一种标准化的方式，用于多线程程序同步访问共享资源，以防止数据损坏和竞争条件。
+
+   pthread_mutex_t 实际上是一个互斥锁（mutex）对象。它用于创建和管理多线程程序中的互斥锁。互斥锁是同步原语，允许多个线程协调工作，确保在任何时刻只有一个线程可以访问关键代码段或共享资源。这可以防止在多个线程同时尝试访问相同资源时发生冲突和数据损坏。
+
+
+
+# 互斥量与锁
+
+## 总结
+
+1. 常用的互斥对象：`std::mutex`（互斥对象），`std::shared_mutex`(读写互斥锁)
+2. 三个用于代替互斥对象的成员函数，管理互斥对象的锁（都是构造加锁，析构解锁）：`std::lock_guard`用于管理`std::mutex`，`std::unique_lock`。`std::shared_lock`管理`std::shared_mutex`
+
+## lock_guard
+
+lock_guard：这是C++11中一个简单的 RAII（Resource Acquisition Is Initialization）风格的锁，用于在作用域内自动管理互斥量的锁定和解锁。当 lock_guard 对象被创建时，它会自动锁定互斥量，当对象离开作用域时，它会自动解锁互斥量。lock_guard 不支持手动锁定和解锁，也不支持条件变量。
+
+lock_guard取代了mutex的lock()和unlock();
+
+unique_lock比lock_guard灵活很多，效率上差一点，内存占用多一点。
+
+```c++
+std::mutex mtx;
+std::lock_guard<std::mutex> lck (mtx);  // 构造时加锁，离开作用域析构解锁
+```
+
+## unique_lock
+
+https://blog.csdn.net/u012507022/article/details/85909567?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171578033016800188583903%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=171578033016800188583903&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-1-85909567-null-null.142^v100^pc_search_result_base4&utm_term=unique_lock&spm=1018.2226.3001.4187
+
+unique_lock：这是C++11中一个更灵活的锁，它允许手动锁定和解锁互斥量，以及与条件变量一起使用（是lock_guard的进阶版）。与 lock_guard 类似，unique_lock 也是一个 RAII 风格的锁，当对象离开作用域时，它会自动解锁互斥量。unique_lock 还支持延迟锁定、尝试锁定和可转移的锁所有权。
+## shared_lock
+
+shared_lock：C++14引入的锁，这是一个用于共享互斥量（如 std::shared_mutex 或 std::shared_timed_mutex）的锁，允许多个线程同时读取共享数据，但在写入数据时仍然保证互斥。shared_lock 也是一个 RAII 风格的锁，当对象离开作用域时，它会自动解锁共享互斥量。shared_lock 支持手动锁定和解锁，以及尝试锁定。
+共享锁，也叫多线程锁，当data被一个线程读取时，仍允许其它线程读取数据，但是不能写入操作。
+
+
+
+* 头文件 #include <shared_mutex>。
+* 用于实现共享和独占访问的互斥锁。
+* 提供了一种更加灵活的机制，允许多个线程在共享模式下读取数据，但只允许单个线程在独占模式下写入或修改数据。
+* 与 std::mutex 相比，具有以下额外特性：
+
+    多个线程可以同时以共享模式（shared mode）持有锁，允许并发读取操作。
+    只有一个线程可以以独占模式（exclusive mode）持有锁，允许写入或修改操作。
+    当一个线程以独占模式持有锁时，其他线程无法以共享模式持有锁，它们必须等待独占模式的线程释放锁。
+    当一个线程以共享模式持有锁时，其他线程可以以共享模式持有锁，允许并发读取操作。
+### 成员函数
+
+* lock：锁定互斥，若互斥不可用则阻塞。
+* try_lock：尝试锁定互斥，若互斥不可用则返回。
+* unlock：解锁互斥。
+* lock_shared：以共享模式锁定互斥，若互斥不可用则阻塞。
+* try_lock_shared：尝试以共享模式锁定互斥，若互斥不可用则返回。
+* unlock_shared：解锁以共享模式锁定的互斥。
+
+## shared_mutex
+
+C++17中引入std::shared_mutex
+ std::shared_mutex用于管理可转移和共享所有权的互斥对象，适用场景比较特殊：一个或多个读线程同时读取共享资源，且只有一个写线程来修改这个资源，这种情况下才能从shared_mutex获取性能优势。.
+
+
+
+# 智能指针
+
+## shared_ptr
+
+资源可以被多个指针共享，它使用计数机制来表明资源被几个指针共享。可以通过成员函数use_count()来查看资源的所有者个数。出了可以通过new来构造，还可以通过传入auto_ptr, unique_ptr,weak_ptr来构造。当我们调用release()时，当前指针会释放资源所有权，计数减一。当计数等于0时，资源会被释放。
+
+```c++
+int main()
+{
+    shared_ptr<Test> ptest(new Test("123"));
+    shared_ptr<Test> ptest2(new Test("456"));
+    cout<<ptest2->getStr()<<endl;
+    cout<<ptest2.use_count()<<endl;
+    ptest = ptest2;//"456"引用次数加1，“123”销毁
+    ptest->print();
+    cout<<ptest2.use_count()<<endl;//2
+    cout<<ptest.use_count()<<endl;//2
+    ptest.reset();
+    ptest2.reset();//此时“456”销毁
+    cout<<"done !\n";
+    return 0;
+}
+```
+
+
+
+# 原子操作
+
+std::atomic
+
+## 相关接口
+
+`atomic a=val`以val为a的初始值（这个不是atomic的操作）
+
+`a.store(val)`赋值val（返回void）
+
+`a.load()`返回a的copy
+
+`a.exchange(val)`赋值val并返回旧值a的拷贝
+
+`a.compare_exchange_strong(exp,des)`cas操作
+
+`a.compare_exchange_weak(exp,des)`weak cas操作
+
+## CAS(比较并替换)接口的使用
+
+compare_exchange_strong(T& expected,T desired,
+
+std::memory_order success,
+
+std::memory_order failure) 和
+
+ compare_exchange_weak(T& expected,T desired,
+
+std::memory_order success,
+
+std::memory_order failure)
+
+这两个接口都是CAS操作（compare and swap）。CPU常常提供这个atomic操作用以比较“某内存内容”和“某给定值”，并且唯有在他们相同时才将该内存区内容更新为另一给定的新值。这可以保证新值是根据最新信息计算出来的。
+
+这些函数会原子地执行这些操作：**对比对象的值和expected的值，如果相等就会把对象的值替换为desired的值；否则，就把expected的值更新为原子对象的最新值**
+
+>expected：是一个引用，表示所期待的原子对象的值。如果比对失败，就把expected的值更新为原子对象的最新值
+>
+>desired：如果对比成功，保存到原子对象中的值
+>
+>success：指定对比成功时的执行读-修改-写操作的内存同步顺序
+>
+>failure：  指定对比失败时的执行读-修改-写操作的内存同步顺序；不能是std::memory_order_release or std::memory_order_acq_rel
+
+ 如果修改成功就返回true，否则返回false。
+
+```C++
+#include<atomic>
+#include<iostream>
+
+std::atomic<int> ai;
+
+int tst_val=4;
+int new_val=5;
+bool exchanged=false;
+
+void valsout()
+{
+    std::cout << "ai= " << ai
+	      << "  tst_val= " << tst_val
+	      << "  new_val= " << new_val
+	      << "  exchanged= " << std::boolalpha << exchanged
+	      << "\n";
+}
+
+int main(){
+    ai=3;
+    valsout();
+    
+    //tst_val!=ai ==> tst_val is modified
+    //这个时候由于ai为3，tst_val为4，所以对比就会失败，那么tst_val就会被修改为3
+    exchanged=ai.compare_exchange_strong(tst_val,new_val);
+    valsout();
+    //这个时候对比就会成功,那么ai的就会被修改为new_val
+    //tst_val==ai ==> ai is modified
+    exchanged=ai.compare_exchange_strong(tst_val,new_val);
+    valsout();
+}
+```
+
+ai= 3  tst_val= 4  new_val= 5  exchanged= false
+ai= 3  tst_val= 3  new_val= 5  exchanged= false
+ai= 5  tst_val= 3  new_val= 5  exchanged= true

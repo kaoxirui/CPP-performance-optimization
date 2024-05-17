@@ -56,6 +56,7 @@ CMAKE_BINARY_DIR = /home/kao/cpp/CPP-performance-optimization/build
 all: CMakeFiles/Asynchronous_programming.dir/all
 all: CMakeFiles/producer-consumer.dir/all
 all: CMakeFiles/multi_thread_shared_mutex.dir/all
+all: CMakeFiles/lockfree.dir/all
 all: CMakeFiles/multi_thread_mutex.dir/all
 
 .PHONY : all
@@ -69,6 +70,7 @@ preinstall:
 clean: CMakeFiles/Asynchronous_programming.dir/clean
 clean: CMakeFiles/producer-consumer.dir/clean
 clean: CMakeFiles/multi_thread_shared_mutex.dir/clean
+clean: CMakeFiles/lockfree.dir/clean
 clean: CMakeFiles/multi_thread_mutex.dir/clean
 
 .PHONY : clean
@@ -107,7 +109,7 @@ CMakeFiles/Asynchronous_programming.dir/clean:
 CMakeFiles/producer-consumer.dir/all:
 	$(MAKE) -f CMakeFiles/producer-consumer.dir/build.make CMakeFiles/producer-consumer.dir/depend
 	$(MAKE) -f CMakeFiles/producer-consumer.dir/build.make CMakeFiles/producer-consumer.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/kao/cpp/CPP-performance-optimization/build/CMakeFiles --progress-num=7,8 "Built target producer-consumer"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/kao/cpp/CPP-performance-optimization/build/CMakeFiles --progress-num=9,10 "Built target producer-consumer"
 .PHONY : CMakeFiles/producer-consumer.dir/all
 
 # Build rule for subdir invocation for target.
@@ -134,7 +136,7 @@ CMakeFiles/producer-consumer.dir/clean:
 CMakeFiles/multi_thread_shared_mutex.dir/all:
 	$(MAKE) -f CMakeFiles/multi_thread_shared_mutex.dir/build.make CMakeFiles/multi_thread_shared_mutex.dir/depend
 	$(MAKE) -f CMakeFiles/multi_thread_shared_mutex.dir/build.make CMakeFiles/multi_thread_shared_mutex.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/kao/cpp/CPP-performance-optimization/build/CMakeFiles --progress-num=5,6 "Built target multi_thread_shared_mutex"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/kao/cpp/CPP-performance-optimization/build/CMakeFiles --progress-num=7,8 "Built target multi_thread_shared_mutex"
 .PHONY : CMakeFiles/multi_thread_shared_mutex.dir/all
 
 # Build rule for subdir invocation for target.
@@ -155,13 +157,40 @@ CMakeFiles/multi_thread_shared_mutex.dir/clean:
 .PHONY : CMakeFiles/multi_thread_shared_mutex.dir/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/lockfree.dir
+
+# All Build rule for target.
+CMakeFiles/lockfree.dir/all:
+	$(MAKE) -f CMakeFiles/lockfree.dir/build.make CMakeFiles/lockfree.dir/depend
+	$(MAKE) -f CMakeFiles/lockfree.dir/build.make CMakeFiles/lockfree.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/kao/cpp/CPP-performance-optimization/build/CMakeFiles --progress-num=3,4 "Built target lockfree"
+.PHONY : CMakeFiles/lockfree.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/lockfree.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/kao/cpp/CPP-performance-optimization/build/CMakeFiles 2
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/lockfree.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/kao/cpp/CPP-performance-optimization/build/CMakeFiles 0
+.PHONY : CMakeFiles/lockfree.dir/rule
+
+# Convenience name for target.
+lockfree: CMakeFiles/lockfree.dir/rule
+
+.PHONY : lockfree
+
+# clean rule for target.
+CMakeFiles/lockfree.dir/clean:
+	$(MAKE) -f CMakeFiles/lockfree.dir/build.make CMakeFiles/lockfree.dir/clean
+.PHONY : CMakeFiles/lockfree.dir/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/multi_thread_mutex.dir
 
 # All Build rule for target.
 CMakeFiles/multi_thread_mutex.dir/all:
 	$(MAKE) -f CMakeFiles/multi_thread_mutex.dir/build.make CMakeFiles/multi_thread_mutex.dir/depend
 	$(MAKE) -f CMakeFiles/multi_thread_mutex.dir/build.make CMakeFiles/multi_thread_mutex.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/kao/cpp/CPP-performance-optimization/build/CMakeFiles --progress-num=3,4 "Built target multi_thread_mutex"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/kao/cpp/CPP-performance-optimization/build/CMakeFiles --progress-num=5,6 "Built target multi_thread_mutex"
 .PHONY : CMakeFiles/multi_thread_mutex.dir/all
 
 # Build rule for subdir invocation for target.

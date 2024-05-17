@@ -10,7 +10,7 @@ class ThreadPool{
     private:
         std::vector<std::thread>workers;
         std::queue<std::function<void()>>tasks;//std::function<void()>可以封装无参数和无返回值的函数或可调用对象。void是返回类型，（）是参数
-
+        //function<T>f;  f是用来存储可调用对象的空function
         std::mutex queue_mutex;
         std::condition_variable condition;
         bool stop;
@@ -39,6 +39,7 @@ class ThreadPool{
         ~ThreadPool();
 };
 
+//lambda表达式在ThreadPool构造函数中定义，因此可以直接访问ThreadPool类的成员
 inline ThreadPool::ThreadPool(size_t threads):stop(false){
     for(size_t i=0;i<threads;++i)//使用循环创建指定数量的工作线程
         workers.emplace_back([this]{//lambda表达式捕获了this指针，以便在线程函数内部访问ThreadPool对象的成员
@@ -47,11 +48,17 @@ inline ThreadPool::ThreadPool(size_t threads):stop(false){
                 {
                     std::unique_lock<std::mutex>lock(this->queue_mutex);
                     this->condition.wait(lock,[this]{
-                        return this->stop || !this->tasks.empty();
+                        return this->stop || !this->tasks.empty();//stop为true或任务队列不为空
+                        //this->stop为true意味着线程池即将关闭，工作线程应该退出
+                        //this->tasks不为空意味着新的任务需要执行，工作线程应该被唤醒来处理这些任务
                     });
                     if(this->stop&&this->tasks.front())
                         return;
-                    task=std::move(this->tasks.front());
+                    /*
+                    当线程池正在关闭,但是还有剩余任务未执行完时,
+                    工作线程会直接退出,而不再去处理新的任务。这是为了确保线程池能够安全地关闭,不会有未处理的任务遗留下来。
+                    */
+                    task=std::move(this->tasks.front());//将一个左值转换为右值引用，以便移动语义可以被应用
                     this->tasks.pop();
                 }
             task();
@@ -72,14 +79,31 @@ auto ThreadPool::enqueue(F&& f,Args&&... args)
     auto task=std::make_shared<std::packaged_task<return_type()>>(
         std::bind(std::forward<F>(f),std::forward<Args>(args)...)
     );
+    /*
+        make_shared是一个智能指针工厂函数，用于创建一个std::shared_ptr对象
+        std::packaged_task<return_type()>是一个类型模板，他表示一个可调用对象，返回类型为return_type
+        std::bind是一个函数适配器，用于将函数对象f和参数args绑定为一个新的可调用对象
+        std::forward<F>(f) 和 std::forward<Args>(args)... 利用完美转发保留了参数的左值/右值属性。
+
+        做了两件事
+        1. 创建了std::packaged_task对象，封装了函数对象f和参数args
+        2. 将这个std::packaged_task对象包装到std::shared_ptr中，便于在多个地方共享和使用
+    */
     std::future<return_type>res=task->get_future();
+    /*
+        从之前创建的std::shared_ptr<std::package_task<return_type()>>task中获取关联的std::future<return_type>对象
+    */
     {
         std::unique_lock<std::mutex>lock(queue_mutex);
         if(stop)
             throw std::runtime_error("enqueue on stopped ThreadPool");
         tasks.emplace([task](){(*task)();});
+        /*
+            [task]()：捕获task对象，这个lambda表达式是一个可调用对象，将在工作线程中执行
+            {(*task)();}：lambda表达式函数体，通过解引用task指针来调用被封装的std::packaged_task对象从而执行实际的任务
+        */
     }
-    condition.notify_one();
+    condition.notify_one();//通知工作线程有新任务加入，让他们尽快取出并执行
     return res;
 }
 
